@@ -2,7 +2,7 @@
    (:require 
     [clj-manifold3d.core :as m]
     [plexus.core 
-     :refer [forward hull left right up down backward translate
+     :refer [forward hull left right up down translate trim-by-plane
              set set-meta segment lookup-transform transform branch offset 
              rotate frame save-transform add-ns extrude to points export
              result difference union insert intersection loft export-models]]))
@@ -13,7 +13,8 @@
 ;;
 ;; 
 ;; 
-;; Now, let's create your first Manifold by evaluating this form:
+;; Now, after you've launched a repl and evaluated the ns form above,
+;; let's create your first Manifold by evaluating this form:
  
 (export (m/cube 40 40 60 true) "model.glb") ; Alt-Enter here to evaluate
 
@@ -55,7 +56,7 @@
 
 ;; Any CrossSection can be extruded into a Manifold representing a 3D object. 
 
-;; Similar to extrude, there is also revolve
+;; Similar to extrude, there is also revolve:
 
 (m/revolve (m/square 10 10 false) 100 90)
 
@@ -97,6 +98,7 @@
                                    (m/translate [0 0 20])))))
 
 ;; These are the fundamentals of solid modelling with manifold.
+;;
 ;; There are a few more high-level functions that are often quite useful.
 ;; The first is hull. Hull returns the Convex Hull of the input Manifolds 
 ;; or CrossSections that you give it.
@@ -164,6 +166,232 @@
                [2 3 7 6]
                [3 0 4 7]])
 
-;; This is a very general and powerful function in the hands of a skillful user.
+;; With these functions, you can create just about anything you can imagine.
 ;;
-;; 
+;; Now that you understand Manifold, you're ready to understand how plexus
+;; complements manifold and makes some models much easier to specify. Plexus
+;; is essentialyl a DSL for extrude 3D gemotries. It enables you to "grow"
+;; an arbitrarily complex tree of extrusions, which you then composite with CSG
+;; operations.
+;;
+;; It's easiest to understand how it works with a simple example:
+
+(extrude
+ (result :name :pipes
+         :expr (difference :body :mask))
+
+ (frame :cross-section (m/circle 6) :name :body)
+ (frame :cross-section (m/circle 4) :name :mask)
+ (set :curve-radius 20 :to [:body]) (set :curve-radius 20 :to [:mask])
+
+ (left :angle (/ Math/PI 2) :to [:body])
+ (left :angle (/ Math/PI 2) :to [:mask])
+
+ (right :angle (/ Math/PI 2) :to [:body])
+ (right :angle (/ Math/PI 2) :to [:mask])
+
+ (forward :length 10 :to [:body])
+ (forward :length 10 :to [:mask])
+
+ (up :angle (/ Math/PI 2) :to [:body])
+ (up :angle (/ Math/PI 2) :to [:mask]))
+
+;; Here, outer cross section is a circle with radius of 6. The mask
+;; cross section is a circle of radius 4. We then specify a series of egocentric transformations to the
+;; outer and inner cross sections.
+;;
+;; Obviously there is a lot of code duplication here. After providing the cross section for the inner and outer forms,
+;; the transformations we apply to each are equivalent. We can get rid of that duplication by only providing one 
+;; transforming both cross sections with each segment:
+
+(extrude
+ (result :name :pipes
+         :expr (difference :body :mask))
+
+ (frame :cross-section (m/circle 6) :name :body)
+ (frame :cross-section (m/circle 4) :name :mask)
+ (set :curve-radius 20 :to [:body :mask])
+
+ (left :angle (/ Math/PI 2) :to [:body :mask])
+ (right :angle (/ Math/PI 2) :to [:body :mask])
+ (forward :length 10 :to [:body :mask])
+ (up :angle (/ Math/PI 2) :to [:body :mask]))
+
+;; As you can see, this is equivalent to the definition above.
+;; But there still a lot of duplication. The `:to [:outer :inner]` is repeated in each segment.
+;; We can elide this, as by default each segment will reply to every frame you have defined:
+
+(extrude
+ (result :name :pipes
+         :expr (difference :body :mask))
+
+ (frame :cross-section (m/circle 6) :name :body)
+ (frame :cross-section (m/circle 4) :name :mask)
+ (set :curve-radius 20)
+
+ (left :angle (/ Math/PI 2))
+ (right :angle (/ Math/PI 2))
+ (forward :length 10)
+ (up :angle (/ Math/PI 2)))
+
+;; Now hopefully you understand the basic idea of plexus. You define a sequence of segments 
+;; where each segment picks up where the previous one left off. You might think 
+;; this is nice to have for rare cases, but isn't that general. Hopefully as we go through
+;; more examples, you're start to see how general plexus can be. 
+;;
+;; Let's take a look now at how hulls are handled in plexus:
+
+(extrude
+ (result :name :pipes
+         :expr (difference :body :mask))
+
+ (frame :cross-section (m/circle 6) :name :body)
+ (frame :cross-section (m/circle 4) :name :mask)
+ (set :curve-radius 20)
+ (hull
+  (hull
+   (forward :length 20)
+   (set :cross-section (m/square 20 20 true) :to [:body])
+   (set :cross-section (m/square 16 16 true) :to [:mask])
+   (forward :length 20))
+  (set :cross-section (m/circle 6) :to [:body])
+  (set :cross-section (m/circle 4) :to [:mask])
+  (forward :length 20)))
+
+;; And, not surprisingly, loft is also available:
+
+(extrude
+ (result :name :pipes :expr :body)
+ (frame :cross-section (m/difference (m/circle 20) (m/circle 18)) :name :body)
+ (loft
+  (forward :length 1)
+  (for [_ (range 3)]
+    [(translate :x 8)
+     (forward :length 20)
+     (translate :x -8)
+     (forward :length 20)])))
+
+;; Okay, that's somewhat handy. But with `branch` you really
+;; start to see the power of plexus:
+
+(def pi|2 (/ Math/PI 2))
+
+(extrude
+ (result :name :pipes
+         :expr (difference :body :mask))
+
+ (frame :cross-section (m/circle 6) :name :body)
+ (frame :cross-section (m/circle 4) :name :mask)
+ (set :curve-radius 10)
+
+ (branch :from :body (left :angle pi|2) (right :angle pi|2) (forward :length 20))
+ (branch :from :body (right :angle pi|2) (left :angle pi|2) (forward :length 20)))
+
+;; The body of the branch form is the same as extrude, so you can nest arbitrarily.
+;; The required ":from" property determines the starting coordinate frame of the branch. 
+;; There's also an optional `:with` parameter that specifies which frames to include in the branch
+
+(extrude
+ (result :name :pipes
+         :expr (difference :body :mask))
+
+ (frame :cross-section (m/circle 6) :name :body)
+ (frame :cross-section (m/circle 4) :name :mask)
+ (set :curve-radius 10)
+
+ (branch :from :body (left :angle pi|2) (right :angle pi|2) (forward :length 20))
+ (branch
+  :from :body
+  :with [:body]
+  (right :angle pi|2)
+  (left :angle pi|2)
+  (forward :length 20)))
+
+;; You an also make any segment a gap using the `:gap` parameter:
+
+(extrude
+ (frame :cross-section (m/circle 6) :name :body :curve-radius 10)
+ (for [i (range 3)]
+   [(left :angle (/ Math/PI 2) :gap true)
+    (right :angle (/ Math/PI 2))]))
+
+;; You can also specify which subset of active frames should be a gap by supplying a vector frame names:
+
+(extrude
+ (frame :cross-section (m/circle 6) :name :body :curve-radius 10)
+ (for [i (range 3)]
+   [(left :angle (/ Math/PI 2) :gap [:body])
+    (right :angle (/ Math/PI 2))]))
+
+;; This is equivalent to above.
+;;
+;; Another powerful operation in extrusions is insert. Insert lets you
+;; compose extrusions.
+
+(let [pipe (extrude
+            (result :name :pipe :expr (difference :outer :inner))
+            (frame :cross-section (m/circle 6) :name :outer :curve-radius 10)
+            (frame :cross-section (m/circle 4) :name :inner)
+            (forward :length 30)) ]
+  (extrude
+   (result :name :pipes
+           :expr (->> :pipe
+                      (trim-by-plane {:normal [-1 0 0]})
+                      (translate {:z 30})))
+   (frame :name :origin)
+
+   (for [i (range 4)]
+     (branch
+      :from :origin
+      (rotate :x (* i 1/2 Math/PI))
+      (insert :extrusion pipe)))))
+
+;; We can also insert specific models with insert:
+
+(let [pipe (extrude
+            (result :name :pipe :expr (difference :outer :inner))
+            (frame :cross-section (m/circle 6) :name :outer :curve-radius 10)
+            (frame :cross-section (m/circle 4) :name :inner)
+            (forward :length 30))]
+  (extrude
+   (result :name :pipes
+           :expr (->> (difference :outer :inner)
+                      (trim-by-plane {:normal [-1 0 0]})
+                      (translate {:z 30})))
+   (frame :name :origin)
+
+   (for [i (range 4)]
+     (branch
+      :from :origin
+      (rotate :x (* i 1/2 Math/PI))
+      (insert :extrusion pipe
+              :models [:outer :inner])))))
+
+;; Notice the subtle difference in the result! Order of operations is an important
+;; consideration when doing programmatic solid modelling. Often you'll find you want to defer
+;; CSG compositing. Plexus purposely keeps the extrusion tree independent from the CSG tree.
+;; Often you want to first define *all* of your extrusions, then do *all* of your compositing to form 
+;; the final model. Historically, this was often ill-adviced because CSG operations were painfully
+;; slow on large models. With Manifold, this is often no longer a concern.
+;;
+;; To fascitate creating large composites, insert also supports namespacing of inserted models:
+
+(let [pipe (extrude
+            (result :name :pipe :expr (difference :outer :inner))
+            (frame :cross-section (m/circle 6) :name :outer :curve-radius 10)
+            (frame :cross-section (m/circle 4) :name :inner)
+            (forward :length 30))]
+  (extrude
+   (result :name :pipes
+           :expr (->> (difference :pipe/outer :pipe/inner)
+                      (trim-by-plane {:normal [-1 0 0]})
+                      (translate {:z 30})))
+   (frame :name :origin)
+
+   (for [i (range 4)]
+     (branch
+      :from :origin
+      (rotate :x (* i 1/2 Math/PI))
+      (insert :extrusion pipe
+              :models [:outer :inner]
+              :ns :pipe)))))

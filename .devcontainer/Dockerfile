@@ -1,4 +1,3 @@
-# Use an official Clojure image as a parent image
 FROM ubuntu:22.04
 
 # Ensure non-interactive installations (avoid prompts)
@@ -8,9 +7,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     # Install OpenJDK 17
     openjdk-17-jdk \
-    # Install Clojure (use the official script for this)
+    # Install utilities
     && apt-get install -y curl wget unzip \
-    # Install libassimp-dev
+    # Install libassimp-dev for Manifold and rlwrap `clj` CLI tool.
     && apt-get install -y libassimp-dev rlwrap \
     # Cleanup
     && apt-get clean \
@@ -33,23 +32,6 @@ RUN curl -sLO https://raw.githubusercontent.com/clj-kondo/clj-kondo/master/scrip
     && ./install-clj-kondo\
     && rm ./install-clj-kondo
 
-# RUN mkdir -p /root/.deps.clj/1.11.1.1403/ClojureTools && \
-#    wget -qO- https://github.com/clojure/brew-install/releases/download/1.11.1.1403/clojure-tools-1.11.1.1403.tar.gz \
-#    | tar xvz -C /root/.deps.clj/1.11.1.1403/ClojureTools
-
-# Set the working directory in docker
-WORKDIR /workspace
-
-# Copy the current directory contents into the container at /workspace
-COPY . /workspace
-
-RUN mkdir -p /var/lib/plexus
-
-# Install system dependencies (if any)
-
-# You can add any other tools or utilities you need
-
-# Expose the port the app runs on (this is optional and depends on your application)
 EXPOSE 8080
 
 CMD ["tail", "-f", "/dev/null"]
