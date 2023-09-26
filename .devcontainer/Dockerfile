@@ -31,7 +31,3 @@ RUN curl -sLO https://raw.githubusercontent.com/clj-kondo/clj-kondo/master/scrip
     && chmod +x install-clj-kondo\
     && ./install-clj-kondo\
     && rm ./install-clj-kondo
-
-EXPOSE 8080
-
-CMD ["tail", "-f", "/dev/null"]

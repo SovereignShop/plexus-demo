@@ -33,6 +33,7 @@
 (m/cube 40 40 40 true) ; Enter "ctrl-alt-space space", then select "d"
 
 ;; Now is is handy but also a bit cumbersome. I recommend setting up a key binding in keybindings.json.
+;; You open this file with the command "Preferences: Open Keyboard Shortcuts (JSON)".
 ;; For example:
 ;;    {
 ;;        "key": "ctrl+alt+m",
