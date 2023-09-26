@@ -320,7 +320,7 @@
 
 (extrude
  (frame :cross-section (m/circle 6) :name :body :curve-radius 10)
- (for [i (range 3)]
+ (for [_ (range 3)]
    [(left :angle (/ Math/PI 2) :gap [:body])
     (right :angle (/ Math/PI 2))]))
 
@@ -375,7 +375,7 @@
 ;; the final model. Historically, this was often ill-adviced because CSG operations were painfully
 ;; slow on large models. With Manifold, this is often no longer a concern.
 ;;
-;; To fascitate creating large composites, insert also supports namespacing of inserted models:
+;; To fascitate creating large composites and overal good hygene, insert also supports namespacing of inserted models:
 
 (let [pipe (extrude
             (result :name :pipe :expr (difference :outer :inner))

@@ -26,7 +26,8 @@
     },
     "postCreateCommand": "echo 'Container is ready!'"
     // You will likely want to bind-mount the maven repo directory into your container so it doesn't
-    // Have to re-download dependencies with every launch.
+    // Have to re-download dependencies with every launch. If you don't have one already, you can create an empty 
+    // directory at ${HOME}/.m2.
     //"mounts": [
     //    "source=${env:HOME}/.m2,target=/root/.m2,type=bind"
     //]
