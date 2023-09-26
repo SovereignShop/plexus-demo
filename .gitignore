@@ -6,3 +6,7 @@
 .lein-failures
 .nrepl-port
 .cpcache/
+.calva/
+.clj-kondo/
+.lsp/
+model.glb
