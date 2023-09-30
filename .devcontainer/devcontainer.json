@@ -7,7 +7,7 @@
                 "terminal.integrated.shell.linux": "/bin/bash",
                 "calva.customREPLCommandSnippets": [
                     {
-                        "name": "Call Current Form",
+                        "name": "Plexus: Export Current Form",
                         "key": "d",
                         "snippet": "(require 'plexus-demo.repl)(plexus-demo.repl/export-model $current-form)"
                     }

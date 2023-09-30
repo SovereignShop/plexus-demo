@@ -312,7 +312,7 @@
 
 (extrude
  (frame :cross-section (m/circle 6) :name :body :curve-radius 10)
- (for [i (range 3)]
+ (for [_ (range 3)]
    [(left :angle (/ Math/PI 2) :gap true)
     (right :angle (/ Math/PI 2))]))
 
