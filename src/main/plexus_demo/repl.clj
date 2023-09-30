@@ -9,4 +9,4 @@
      (m/extrude model 1/2)
      model)
    "model.glb"
-   (m/material :color [2.0 61 59 1.0] :metalness 0.2)))
+   (m/material :color [0.4 0.7 0.7 1.0] :metalness 0.8)))
