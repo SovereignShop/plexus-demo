@@ -3,7 +3,7 @@
     [clj-manifold3d.core :as m]
     [plexus.core 
      :refer [forward hull left right up down translate trim-by-plane
-             set set-meta segment lookup-transform transform branch offset 
+             set set-meta lookup-transform transform branch offset 
              rotate frame save-transform add-ns extrude to points export
              result difference union insert intersection loft export-models]]))
  
