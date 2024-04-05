@@ -39,7 +39,7 @@
 ;;        "key": "ctrl+alt+m",
 ;;        "command": "calva.runCustomREPLCommand",
 ;;        "args": {
-;;            "snippet": "(require 'plexus-demo.repl)(plexus-demo.repl/export-model $current-form)"
+;;            "snippet": "(require 'plexus.core)(plexus.core/export $current-form \"model.glb\")"
 ;;        }
 ;;    }
 ;;
