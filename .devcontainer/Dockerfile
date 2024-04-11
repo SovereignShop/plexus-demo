@@ -16,15 +16,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Clojure
-RUN curl -O https://download.clojure.org/install/linux-install-1.11.1.1413.sh\
-    && chmod +x linux-install-1.11.1.1413.sh\
-    && ./linux-install-1.11.1.1413.sh\
-    && rm ./linux-install-1.11.1.1413.sh
+RUN curl -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh\
+    && chmod +x linux-install.sh\
+    && ./linux-install.sh\
+    && rm ./linux-install.sh
 
 # Clojure LSP server
-COPY ./install-latest-clojure-lsp.sh ./
-RUN ./install-latest-clojure-lsp.sh\
-    && rm ./install-latest-clojure-lsp.sh
+RUN curl -sLO https://github.com/clojure-lsp/clojure-lsp/releases/download/2024.03.31-19.10.13/clojure-lsp-native-linux-amd64.zip \
+    && unzip clojure-lsp-native-linux-amd64.zip \
+    && mv clojure-lsp /usr/local/bin/
 
 # Clojure Kondo for linting: https://github.com/clj-kondo/clj-kondo/blob/master/doc/install.md
 RUN curl -sLO https://raw.githubusercontent.com/clj-kondo/clj-kondo/master/script/install-clj-kondo\
