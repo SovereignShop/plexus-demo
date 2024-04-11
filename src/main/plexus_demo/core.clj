@@ -43,6 +43,17 @@
 ;;        }
 ;;    }
 ;;
+;; I also recommend creating a similar binding for evaluating the current top level form.
+;; 
+;;     {
+;;         "key": "ctrl+alt+n",
+;;         "command": "calva.runCustomREPLCommand",
+;;         "args": {
+;;             "snippet": "(require 'plexus.core)(plexus.core/export $top-level-form \"model.glb\")"
+;;         }    
+;;     }
+;;
+;; This will let you rapidly iterate on the current model that you are building
 ;; 
 ;; You can also visualize manifold's 2D CrossSections the same way you visualize 3D Manifolds:
 ;; For example:
@@ -228,7 +239,7 @@
 
  (frame :cross-section (m/circle 6) :name :body)
  (frame :cross-section (m/circle 4) :name :mask)
- (set :curve-radius 20)
+ (set :curve-radius 40)
 
  (left :angle (/ Math/PI 2))
  (right :angle (/ Math/PI 2))
@@ -271,6 +282,16 @@
      (forward :length 20)
      (translate :x -8)
      (forward :length 20)])))
+
+(defn combs [n k]
+  (cond 
+    (= n k) (list (range n))
+    (= k 1) (map list (range n))
+    :else 
+    (concat (map (partial cons (dec n))
+                 (combs (dec n) (dec k)))
+            (combs (dec k) k))))
+(combs 3 2)
 
 ;; Okay, that's somewhat handy. But with `branch` you really
 ;; start to see the power of plexus:
