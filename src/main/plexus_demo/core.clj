@@ -53,7 +53,7 @@
 ;;         }    
 ;;     }
 ;;
-;; This will let you rapidly iterate on the current model that you are building
+;; This will let you instantly reload the current model that you are working on.
 ;; 
 ;; You can also visualize manifold's 2D CrossSections the same way you visualize 3D Manifolds:
 ;; For example:
@@ -129,7 +129,7 @@
 ;; In the case of the cylinder, there are 100 latitudinal segments.
 ;; In the cae of the sphere, we specify 100 latitudinal by 100 longitudinal segments.
 ;;
-;; There is support for a primitive form of loft:
+;; There is support for loft:
 
 (m/loft (m/circle 10)
         [(m/frame 1)
@@ -138,24 +138,33 @@
          (-> (m/frame 1)
              (m/translate [0 0 30]))])
 
-;; It simply "skins" over isomorphic cross-sections. You can also specify multiple cross-sections
-;; as long as they all are composed of the same number of points:
+(m/loft (m/circle 10)
+        (for [i (range 11)]
+          (-> (m/frame 1)
+              (m/rotate [0 (- (* i (/ (/ Math/PI 2) 10))) 0])
+              (m/translate [30 0 0]))))
 
-(defn ovol
-  ([rx ry]
-   (ovol rx ry 30))
-  ([rx ry n-steps]
-   (for [x (range n-steps)]
-     (let [d (* x (/ (* 2 Math/PI) n-steps))]
-       [(* rx (Math/cos d))
-        (* ry (Math/sin d))]))))
+;; It simply "skins" over cross-sections. You can also specify a unique cross-sections
+;; for each frame.
 
 (m/loft (take 10
-          (cycle
-           [(ovol 25 18 70)
-            (ovol 18 25 70)]))
+              (cycle
+               [(m/circle 18 30)
+                (m/square 20 20 true)]))
         (for [i (range 10)]
           (m/translate (m/frame 1) [0 0 (* i 20)])))
+
+;; You can also pass a sequence of maps to loft.
+
+(m/loft
+ (reductions
+  (fn [m i]
+    (if (odd? i)
+      (assoc m :frame (m/translate (m/frame 1) [10 0 (* i 10)]))
+      (assoc m :frame (m/translate (m/frame 1) [-10 0 (* i 10)]))))
+  {:cross-section (m/square 20 20 true)
+   :frame (m/frame 1)}
+  (range 10)))
 
 ;; Notice it tan take either CrossSections as input or sequences of points. Sequences are often prefered 
 ;; as CrossSections will remove coplanar points internally, resulting in unpredictable behavior.

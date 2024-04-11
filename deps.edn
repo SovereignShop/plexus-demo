@@ -1,6 +1,7 @@
 {:paths ["src/main"]
- :deps {org.clojars.cartesiantheatrics/manifold3d$linux-x86_64 {:mvn/version "1.0.78"}
-        org.clojars.cartesiantheatrics/plexus {:mvn/version "0.0.14"}
+ :deps {org.clojure/clojure {:mvn/version "1.11.2"}
+        org.clojars.cartesiantheatrics/manifold3d$linux-x86_64 {:mvn/version "1.0.81"}
+        org.clojars.cartesiantheatrics/plexus {:mvn/version "0.0.16"}
         sicmutils/sicmutils   {:mvn/version "0.22.0"}
         }
  
